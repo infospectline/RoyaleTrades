@@ -1,0 +1,30 @@
+# Environment / secrets
+.env
+.env.*
+!.env.example
+
+# SSH private/public keys
+SSH/
+id_ed25519
+id_ed25519.pub
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Local data
+MODELS/
+TRADING SET UP/
+
+# Ignore only M1 and M5 chart data
+CHARTS/*/M1/
+CHARTS/*/M5/
+
+# Logs
+*.log
+
+# OS
+Thumbs.db
+.DS_Store

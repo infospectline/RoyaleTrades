@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Automatic Backtest Trader | Authentication</title>
+
+    <link
+        rel="stylesheet"
+        href="authentication.css"
+    >
+</head>
+
+<body>
+
+    <main class="authentication-page">
+
+        <section class="authentication-card">
+
+            <!-- =====================================================
+            BRAND
+            ====================================================== -->
+
+            <div class="authentication-brand">
+                <div class="authentication-logo">
+                  <img
+                      src="images/royale_trades.png"
+                      alt="Royale Trades"
+                  >
+              </div>
+
+                <div class="authentication-title">
+                    Royale Trades
+                </div>
+            </div>
+
+
+            <!-- =====================================================
+            AUTHENTICATION SWITCH
+            ====================================================== -->
+
+            <div class="authentication-tabs">
+
+                <button
+                    id="loginTab"
+                    type="button"
+                    class="authentication-tab active"
+                >
+                    LOGIN
+                </button>
+
+                <button
+                    id="signupTab"
+                    type="button"
+                    class="authentication-tab"
+                >
+                    SIGN UP
+                </button>
+
+            </div>
+
+
+            <!-- =====================================================
+            LOGIN
+            ====================================================== -->
+
+            <section
+                id="loginPanel"
+                class="authentication-panel"
+            >
+
+                <div class="authentication-panel-header">
+                    <h1>LOGIN</h1>
+
+                    <p>
+                        Sign in to continue.
+                    </p>
+                </div>
+
+
+                <form
+                    id="loginForm"
+                    class="authentication-form"
+                >
+
+                    <div class="authentication-field">
+
+                        <label
+                            for="loginEmail"
+                        >
+                            EMAIL
+                        </label>
+
+                        <input
+                            id="loginEmail"
+                            name="email"
+                            type="email"
+                            autocomplete="email"
+                            placeholder="Enter your email"
+                            required
+                        >
+
+                    </div>
+
+
+                    <div class="authentication-field">
+
+                        <label
+                            for="loginPassword"
+                        >
+                            PASSWORD
+                        </label>
+
+                        <input
+                            id="loginPassword"
+                            name="password"
+                            type="password"
+                            autocomplete="current-password"
+                            placeholder="Enter your password"
+                            required
+                        >
+
+                    </div>
+
+
+                    <button
+                        id="loginButton"
+                        type="submit"
+                        class="authentication-submit-button"
+                    >
+                        LOGIN
+                    </button>
+
+                </form>
+
+
+                <div
+                    id="loginMessage"
+                    class="authentication-message"
+                ></div>
+
+            </section>
+
+
+            <!-- =====================================================
+            SIGN UP
+            ====================================================== -->
+
+            <section
+                id="signupPanel"
+                class="authentication-panel"
+                style="display: none;"
+            >
+
+                <div class="authentication-panel-header">
+                    <h1>SIGN UP</h1>
+
+                    <p>
+                        Create your account.
+                    </p>
+                </div>
+
+
+                <form
+                    id="signupForm"
+                    class="authentication-form"
+                >
+
+                    <div class="authentication-field">
+
+                        <label
+                            for="signupName"
+                        >
+                            NAME
+                        </label>
+
+                        <input
+                            id="signupName"
+                            name="name"
+                            type="text"
+                            autocomplete="given-name"
+                            placeholder="Enter your name"
+                            required
+                        >
+
+                    </div>
+
+
+                    <div class="authentication-field">
+
+                        <label
+                            for="signupSurname"
+                        >
+                            SURNAME
+                        </label>
+
+                        <input
+                            id="signupSurname"
+                            name="surname"
+                            type="text"
+                            autocomplete="family-name"
+                            placeholder="Enter your surname"
+                            required
+                        >
+
+                    </div>
+
+
+                    <div class="authentication-field">
+
+                        <label
+                            for="signupEmail"
+                        >
+                            EMAIL
+                        </label>
+
+                        <input
+                            id="signupEmail"
+                            name="email"
+                            type="email"
+                            autocomplete="email"
+                            placeholder="Enter your email"
+                            required
+                        >
+
+                    </div>
+
+
+                    <div class="authentication-field">
+
+                        <label
+                            for="signupPassword"
+                        >
+                            PASSWORD
+                        </label>
+
+                        <input
+                            id="signupPassword"
+                            name="password"
+                            type="password"
+                            autocomplete="new-password"
+                            placeholder="Create a password"
+                            required
+                        >
+
+                    </div>
+
+
+                    <div class="authentication-field">
+
+                        <label
+                            for="signupConfirmPassword"
+                        >
+                            CONFIRM PASSWORD
+                        </label>
+
+                        <input
+                            id="signupConfirmPassword"
+                            name="confirmPassword"
+                            type="password"
+                            autocomplete="new-password"
+                            placeholder="Confirm your password"
+                            required
+                        >
+
+                    </div>
+
+
+                    <button
+                        id="signupButton"
+                        type="submit"
+                        class="authentication-submit-button"
+                    >
+                        SIGN UP
+                    </button>
+
+                </form>
+
+
+                <div
+                    id="signupMessage"
+                    class="authentication-message"
+                ></div>
+
+            </section>
+
+
+            <!-- =====================================================
+            FOOTER
+            ====================================================== -->
+
+            <div class="authentication-footer">
+                Automatic Backtest Trader
+            </div>
+
+        </section>
+
+    </main>
+
+
+    <script
+        src="authentication.js"
+    ></script>
+
+</body>
+</html>
