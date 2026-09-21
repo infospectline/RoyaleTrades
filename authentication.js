@@ -188,7 +188,7 @@ loginForm.addEventListener(
 
 signupForm.addEventListener(
     "submit",
-    event => {
+    async event => {
 
         event.preventDefault();
 
@@ -245,9 +245,65 @@ signupForm.addEventListener(
 
         showMessage(
             signupMessage,
-            "Registration backend is not connected yet.",
+            "Creating your account...",
             "pending"
         );
+
+        try {
+
+            const response = await fetch(
+                "/api/auth/register",
+                {
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+
+                    body: JSON.stringify({
+                        name: name,
+                        surname: surname,
+                        email: email,
+                        password: password
+                    })
+                }
+            );
+
+            const data = await response.json();
+
+            if (!response.ok) {
+
+                showMessage(
+                    signupMessage,
+                    data.detail || "Registration failed.",
+                    "error"
+                );
+
+                return;
+            }
+
+            showMessage(
+                signupMessage,
+                data.message ||
+                    "Registration submitted. Your account is waiting for approval.",
+                "success"
+            );
+
+            signupForm.reset();
+
+        } catch (error) {
+
+            console.error(
+                "Registration error:",
+                error
+            );
+
+            showMessage(
+                signupMessage,
+                "Could not connect to the registration server.",
+                "error"
+            );
+        }
     }
 );
 

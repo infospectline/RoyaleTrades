@@ -68,6 +68,17 @@ body {
         0 20px 60px rgba(0, 0, 0, 0.45);
 }
 
+/* BROWSER AUTOFILL */
+.authentication-field input:-webkit-autofill,
+.authentication-field input:-webkit-autofill:hover,
+.authentication-field input:-webkit-autofill:focus {
+    -webkit-text-fill-color: #ddd;
+    -webkit-box-shadow: 0 0 0 1000px #222 inset;
+    box-shadow: 0 0 0 1000px #222 inset;
+    border: 1px solid #383838;
+    transition: background-color 9999s ease-in-out 0s;
+}
+
 
 /* =========================================================
    BRAND
