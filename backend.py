@@ -3777,7 +3777,11 @@ async def lifespan(_app: FastAPI):
 
     create_tables()
 
-    mt5_available = initialize_mt5()
+    if WEB_MODE:
+        mt5_available = False
+        print("WEB_MODE: MT5 disabled. Using CHARTS data.")
+    else:
+        mt5_available = initialize_mt5()
 
     startup_stage = "Loading market data"
     startup_progress = 3
