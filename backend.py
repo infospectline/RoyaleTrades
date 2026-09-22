@@ -1503,9 +1503,6 @@ def load_history() -> None:
         )
 
         return
-        
-    global h1_data
-    global startup_stage, startup_progress, startup_message
     
     if WEB_MODE and TIMEFRAME in {"M1", "M5"}:
         raise RuntimeError(
