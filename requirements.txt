@@ -3,6 +3,7 @@ numpy
 uvicorn[standard]
 python-dotenv
 psycopg2-binary
+psycopg
 resend
 pydantic
 torch
