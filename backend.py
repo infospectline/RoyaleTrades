@@ -4633,16 +4633,16 @@ async def websocket_endpoint(websocket: WebSocket):
 
     connected_clients.discard(websocket)
 
-    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-    app.mount(
-        "/",
-        StaticFiles(
-            directory=BASE_DIR,
-            html=True
-        ),
-        name="static"
-    )
+app.mount(
+    "/",
+    StaticFiles(
+        directory=BASE_DIR,
+        html=True
+    ),
+    name="static"
+)
 
 if __name__ == "__main__":
     uvicorn.run(
