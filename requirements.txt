@@ -2,8 +2,7 @@ fastapi
 numpy
 uvicorn[standard]
 python-dotenv
-psycopg2-binary
-psycopg
+psycopg[binary]
 resend
 pydantic
 torch
