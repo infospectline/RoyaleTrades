@@ -3732,7 +3732,7 @@ def snapshot(user_id: Optional[str] = None) -> Dict[str, Any]:
         "last_training_info": last_training_info,
         "last_model_signal": last_model_signal,
 
-        "learning_trades": get_trading_setups(SYMBOL),
+        "learning_trades": get_trading_setups(SYMBOL, user_id),
 
         "results_source": results_source,
         "manual_analysis_results": manual_analysis_results,
