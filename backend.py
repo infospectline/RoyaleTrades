@@ -3839,15 +3839,6 @@ app.include_router(authentication_router)
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-app.mount(
-    "/",
-    StaticFiles(
-        directory=BASE_DIR,
-        html=True
-    ),
-    name="static"
-)
-
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
 
