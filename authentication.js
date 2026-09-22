@@ -216,7 +216,7 @@ loginForm.addEventListener(
                 "success"
             );
 
-            window.location.href = "/";
+            window.location.href = "/frontend.html";
 
         } catch (error) {
 
