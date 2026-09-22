@@ -3832,7 +3832,7 @@ async def lifespan(_app: FastAPI):
         startup_message = "Backend stopped."
 
         if not WEB_MODE:
-        mt5.shutdown()
+            mt5.shutdown()
 
 
 app = FastAPI(lifespan=lifespan)
