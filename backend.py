@@ -11,7 +11,12 @@ import ai
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional
 
-import MetaTrader5 as mt5
+WEB_MODE = os.getenv("WEB_MODE", "false").lower() == "true"
+
+if WEB_MODE:
+    mt5 = None
+else:
+    import MetaTrader5 as mt5
 import uvicorn
 
 from auth_database import create_tables
@@ -27,9 +32,6 @@ from authentication_backend import (
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 
 from contextlib import asynccontextmanager
-
-WEB_MODE = os.getenv("WEB_MODE", "false").lower() == "true"
-
 
 # Fixed strategy configuration
 SYMBOL = "EURUSD"
@@ -3923,8 +3925,6 @@ async def websocket_endpoint(websocket: WebSocket):
             # =====================================================
             # TIMEFRAME SWITCH
             # =====================================================
-
-            WEB_MODE = os.getenv("WEB_MODE", "false").lower() == "true"
 
             if action == "timeframe":
                 new_timeframe = message.get("timeframe", "")
