@@ -3662,7 +3662,7 @@ def get_trade_detail(
 
     return None
 
-def snapshot() -> Dict[str, Any]:
+def snapshot(user_id: Optional[str] = None) -> Dict[str, Any]:
     visible = h1_data[:current_index + 1]
 
     if not visible:
