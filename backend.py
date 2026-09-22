@@ -3679,7 +3679,7 @@ def snapshot() -> Dict[str, Any]:
             "model_available": model_available,
             "model_info": model_info,
             "last_training_info": last_training_info,
-            "learning_trades": get_trading_setups(SYMBOL),
+            "learning_trades": get_trading_setups(SYMBOL, user_id),
         }
 
     decision = evaluate_strategy(visible)
@@ -3884,7 +3884,7 @@ async def websocket_endpoint(websocket: WebSocket):
     )
 
     if h1_data:
-        data = snapshot()
+        data = snapshot(user_id)
 
         data["startup_stage"] = startup_stage
         data["startup_progress"] = startup_progress
@@ -3927,7 +3927,7 @@ async def websocket_endpoint(websocket: WebSocket):
                     # Save the old market/timeframe session before switching.
                     _capture_active_session()
 
-                    data = snapshot()
+                    data = snapshot(user_id)
                     data["startup_stage"] = "Loading market data"
                     data["startup_progress"] = 5
                     data["startup_message"] = (
@@ -3945,7 +3945,7 @@ async def websocket_endpoint(websocket: WebSocket):
 
                     load_ai_runtime()
 
-                    data = snapshot()
+                    data = snapshot(user_id)
                     data["startup_stage"] = "Chart ready"
                     data["startup_progress"] = 100
                     data["startup_message"] = (
@@ -4022,7 +4022,7 @@ async def websocket_endpoint(websocket: WebSocket):
                     # timeframe child-session changes.
                     _capture_active_session()
 
-                    data = snapshot()
+                    data = snapshot(user_id)
                     data["startup_stage"] = "Loading market data"
                     data["startup_progress"] = 5
                     data["startup_message"] = (
@@ -4040,7 +4040,7 @@ async def websocket_endpoint(websocket: WebSocket):
 
                     load_ai_runtime()
 
-                    data = snapshot()
+                    data = snapshot(user_id)
                     data["startup_stage"] = "Chart ready"
                     data["startup_progress"] = 100
                     data["startup_message"] = (
@@ -4088,7 +4088,7 @@ async def websocket_endpoint(websocket: WebSocket):
                         update_all_chart_data
                     )
 
-                    data = snapshot()
+                    data = snapshot(user_id)
 
                     data["startup_stage"] = startup_stage
                     data["startup_progress"] = startup_progress
@@ -4108,7 +4108,7 @@ async def websocket_endpoint(websocket: WebSocket):
                         error
                     )
 
-                    data = snapshot()
+                    data = snapshot(user_id)
 
                     data["startup_stage"] = "Error"
                     data["startup_progress"] = 100
@@ -4139,7 +4139,7 @@ async def websocket_endpoint(websocket: WebSocket):
                         analysis_task is not None
                         and not analysis_task.done()
                     ):
-                        data = snapshot()
+                        data = snapshot(user_id)
 
                         data["startup_stage"] = (
                             "Manual analysis running"
@@ -4192,7 +4192,7 @@ async def websocket_endpoint(websocket: WebSocket):
                         manual_analysis_loop()
                     )
 
-                    data = snapshot()
+                    data = snapshot(user_id)
 
                     data["startup_stage"] = (
                         startup_stage
@@ -4252,7 +4252,7 @@ async def websocket_endpoint(websocket: WebSocket):
                     )
 
                     if analysis_task is not None and not analysis_task.done():
-                        data = snapshot()
+                        data = snapshot(user_id)
                         data["startup_stage"] = "Training running"
                         data["startup_progress"] = startup_progress
                         data["startup_message"] = (
@@ -4280,7 +4280,7 @@ async def websocket_endpoint(websocket: WebSocket):
 
                     analysis_task = asyncio.create_task(training_loop())
 
-                    data = snapshot()
+                    data = snapshot(user_id)
                     data["startup_stage"] = startup_stage
                     data["startup_progress"] = startup_progress
                     data["startup_message"] = startup_message
@@ -4318,7 +4318,7 @@ async def websocket_endpoint(websocket: WebSocket):
                     )
 
                     if analysis_task is not None and not analysis_task.done():
-                        data = snapshot()
+                        data = snapshot(user_id)
                         data["startup_stage"] = "Testing running"
                         data["startup_progress"] = startup_progress
                         data["startup_message"] = (
@@ -4329,7 +4329,7 @@ async def websocket_endpoint(websocket: WebSocket):
                         continue
 
                     if not load_ai_runtime():
-                        data = snapshot()
+                        data = snapshot(user_id)
                         data["startup_stage"] = "Testing unavailable"
                         data["startup_progress"] = 100
                         data["startup_message"] = (
@@ -4359,7 +4359,7 @@ async def websocket_endpoint(websocket: WebSocket):
 
                     analysis_task = asyncio.create_task(testing_loop())
 
-                    data = snapshot()
+                    data = snapshot(user_id)
                     data["startup_stage"] = startup_stage
                     data["startup_progress"] = startup_progress
                     data["startup_message"] = startup_message
@@ -4405,7 +4405,7 @@ async def websocket_endpoint(websocket: WebSocket):
                         user_id
                     )
 
-                    data = snapshot()
+                    data = snapshot(user_id)
 
                     data["learning_action"] = "saved"
                     data["learning_setup"] = saved_setup
@@ -4455,7 +4455,7 @@ async def websocket_endpoint(websocket: WebSocket):
                         user_id
                     )
 
-                    data = snapshot()
+                    data = snapshot(user_id)
 
                     data["learning_action"] = "deleted"
                     data["learning_setup_id"] = setup_id
@@ -4609,7 +4609,7 @@ async def websocket_endpoint(websocket: WebSocket):
                     to_time
                 )
 
-                data = snapshot()
+                data = snapshot(user_id)
 
                 data["levels"] = view_levels
 
