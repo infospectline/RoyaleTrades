@@ -30,6 +30,7 @@ from authentication_backend import (
 )
 
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi.staticfiles import StaticFiles
 
 from contextlib import asynccontextmanager
 
@@ -3835,6 +3836,17 @@ async def lifespan(_app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 app.include_router(authentication_router)
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+app.mount(
+    "/",
+    StaticFiles(
+        directory=BASE_DIR,
+        html=True
+    ),
+    name="static"
+)
 
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
