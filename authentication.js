@@ -150,7 +150,7 @@ signupTab.addEventListener(
 
 loginForm.addEventListener(
     "submit",
-    event => {
+    async event => {
 
         event.preventDefault();
 
@@ -175,12 +175,64 @@ loginForm.addEventListener(
 
         showMessage(
             loginMessage,
-            "Login backend is not connected yet.",
+            "Signing in...",
             "pending"
         );
+
+        try {
+
+            const response = await fetch(
+                "/api/auth/login",
+                {
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+
+                    body: JSON.stringify({
+                        email: email,
+                        password: password
+                    })
+                }
+            );
+
+            const data = await response.json();
+
+            if (!response.ok) {
+
+                showMessage(
+                    loginMessage,
+                    data.detail || "Login failed.",
+                    "error"
+                );
+
+                return;
+            }
+
+            showMessage(
+                loginMessage,
+                data.message || "Login successful.",
+                "success"
+            );
+
+            window.location.href = "/";
+
+        } catch (error) {
+
+            console.error(
+                "Login error:",
+                error
+            );
+
+            showMessage(
+                loginMessage,
+                "Could not connect to the login server.",
+                "error"
+            );
+        }
     }
 );
-
 
 // ============================================================
 // SIGN UP
