@@ -31,6 +31,7 @@ from authentication_backend import (
 
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 
 from contextlib import asynccontextmanager
 
@@ -3839,6 +3840,10 @@ app = FastAPI(lifespan=lifespan)
 app.include_router(authentication_router)
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+@app.get("/frontend.html")
+async def frontend_page():
+    return FileResponse(os.path.join(BASE_DIR, "frontend.html"))
 
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
