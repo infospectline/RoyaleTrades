@@ -41,16 +41,28 @@ STARTING_BALANCE = 100_000.0
 TIMEFRAME = "H1"
 mt5_connected = False
 
-MT5_TIMEFRAMES = {
-    "M1": mt5.TIMEFRAME_M1,
-    "M5": mt5.TIMEFRAME_M5,
-    "M15": mt5.TIMEFRAME_M15,
-    "M30": mt5.TIMEFRAME_M30,
-    "H1": mt5.TIMEFRAME_H1,
-    "H4": mt5.TIMEFRAME_H4,
-    "D1": mt5.TIMEFRAME_D1,
-    "W1": mt5.TIMEFRAME_W1,
-}
+if WEB_MODE:
+    MT5_TIMEFRAMES = {
+        "M1": None,
+        "M5": None,
+        "M15": None,
+        "M30": None,
+        "H1": None,
+        "H4": None,
+        "D1": None,
+        "W1": None,
+    }
+else:
+    MT5_TIMEFRAMES = {
+        "M1": mt5.TIMEFRAME_M1,
+        "M5": mt5.TIMEFRAME_M5,
+        "M15": mt5.TIMEFRAME_M15,
+        "M30": mt5.TIMEFRAME_M30,
+        "H1": mt5.TIMEFRAME_H1,
+        "H4": mt5.TIMEFRAME_H4,
+        "D1": mt5.TIMEFRAME_D1,
+        "W1": mt5.TIMEFRAME_W1,
+    }
 
 analysis_task = None
 blocked_trades = 0
@@ -1456,6 +1468,42 @@ def _download_mt5_history(
 
 
 def load_history() -> None:
+    if WEB_MODE:
+        global h1_data
+        global startup_stage, startup_progress, startup_message
+
+        path = _chart_history_path(SYMBOL, TIMEFRAME)
+
+        startup_stage = "Loading market data"
+        startup_progress = 5
+        startup_message = (
+            f"Loading local {SYMBOL} {TIMEFRAME} history..."
+        )
+
+        local_data = _load_local_chart_history(path)
+
+        if not local_data:
+            raise RuntimeError(
+                f"No local chart history available for "
+                f"{SYMBOL} {TIMEFRAME}."
+            )
+
+        h1_data = local_data
+
+        startup_stage = "Chart ready"
+        startup_progress = 100
+        startup_message = (
+            f"{SYMBOL} {TIMEFRAME} ready. "
+            f"{len(h1_data):,} candles loaded from local archive."
+        )
+
+        print(
+            f"WEB_MODE: loaded {len(h1_data):,} "
+            f"{SYMBOL} {TIMEFRAME} candles from CHARTS."
+        )
+
+        return
+        
     global h1_data
     global startup_stage, startup_progress, startup_message
     
