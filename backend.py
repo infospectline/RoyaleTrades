@@ -6,7 +6,6 @@ import csv
 import json
 import math
 import os
-import msvcrt
 import re
 import ai
 from datetime import datetime, timedelta, timezone
