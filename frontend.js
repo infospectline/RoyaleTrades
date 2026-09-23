@@ -6,6 +6,12 @@ async function loadWebMode() {
         const config = await response.json();
 
         WEB_MODE = Boolean(config.web_mode);
+        const logoutButton = document.getElementById("logoutButton");
+
+        if (logoutButton) {
+            logoutButton.style.display = WEB_MODE ? "block" : "none";
+        }
+        
         applyWebTimeframeRestrictions();
 
     } catch (error) {
