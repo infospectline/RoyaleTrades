@@ -6,6 +6,7 @@ async function loadWebMode() {
         const config = await response.json();
 
         WEB_MODE = Boolean(config.web_mode);
+        applyWebTimeframeRestrictions();
 
     } catch (error) {
         console.error("Failed to load web mode:", error);
@@ -5344,8 +5345,6 @@ const chartContainer = document.getElementById("chart");
     const marketSelect = document.getElementById("marketSelect");
 
     const timeframeSelect = document.getElementById("timeframeSelect");
-
-    applyWebTimeframeRestrictions();
 
     marketSelect.addEventListener("change", () => {
         const symbol = marketSelect.value;
