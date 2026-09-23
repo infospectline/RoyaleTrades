@@ -255,7 +255,6 @@ const chartContainer = document.getElementById("chart");
     });
 
     const candleSeries = chart.addCandlestickSeries();
-    const lineSeries = chart.addLineSeries({ lineWidth: 1 });
 
     let lastData = null;
     let socket = null;
@@ -1312,7 +1311,6 @@ const chartContainer = document.getElementById("chart");
         clearOverlay();
 
         candleSeries.setData([]);
-        lineSeries.setData([]);
     }
 
     function getStatusText(data) {
@@ -1485,13 +1483,6 @@ const chartContainer = document.getElementById("chart");
                     high: candle.high,
                     low: candle.low,
                     close: candle.close
-                }))
-            );
-
-            lineSeries.setData(
-                data.line.map(point => ({
-                    time: point.time,
-                    value: point.value
                 }))
             );
 
@@ -5027,6 +5018,26 @@ const chartContainer = document.getElementById("chart");
 
         sidebarToggle.textContent = "🡺";
     }
+
+    const logoutButton =
+        document.getElementById("logoutButton");
+
+    if (!WEB_MODE) {
+        logoutButton.style.display = "none";
+    }
+
+    logoutButton.addEventListener("click", async () => {
+        try {
+            await fetch("/api/auth/logout", {
+                method: "POST"
+            });
+
+            window.location.href = "authentication.html";
+
+        } catch (error) {
+            console.error("Logout error:", error);
+        }
+    });
 
     function connect() {
 
