@@ -3837,6 +3837,13 @@ async def lifespan(_app: FastAPI):
 
 
 app = FastAPI(lifespan=lifespan)
+
+@app.get("/api/config")
+async def get_config():
+    return {
+        "web_mode": WEB_MODE
+    }
+    
 app.include_router(authentication_router)
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))

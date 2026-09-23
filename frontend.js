@@ -1,4 +1,16 @@
-const WEB_MODE = false;
+let WEB_MODE = false;
+
+async function loadWebMode() {
+    try {
+        const response = await fetch("/api/config");
+        const config = await response.json();
+
+        WEB_MODE = Boolean(config.web_mode);
+
+    } catch (error) {
+        console.error("Failed to load web mode:", error);
+    }
+}
 
 const WEB_ALLOWED_TIMEFRAMES = [
     "M15",
@@ -5731,4 +5743,6 @@ const chartContainer = document.getElementById("chart");
                 : "🡺";
     });
 
-    connect();
+    loadWebMode().then(() => {
+        connect();
+    });
