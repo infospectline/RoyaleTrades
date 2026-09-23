@@ -5035,7 +5035,9 @@ const chartContainer = document.getElementById("chart");
     const logoutButton =
         document.getElementById("logoutButton");
 
-    if (!WEB_MODE) {
+    if (WEB_MODE) {
+    logoutButton.style.display = "block";
+    } else {
         logoutButton.style.display = "none";
     }
 
