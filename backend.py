@@ -91,7 +91,7 @@ trade_history: List[Dict[str, Any]] = []
 last_trade_result: Optional[str] = None
 major_levels: List[Dict[str, Any]] = []
 
-connected_clients = set()
+connected_clients: Dict[Optional[str], set] = {}
 
 startup_stage = "Starting"
 startup_progress = 0
@@ -1067,7 +1067,7 @@ def _analyze_one_manual_setup(
     }
 
 
-async def manual_analysis_loop() -> None:
+async def manual_analysis_loop(user_id: Optional[str] = None) -> None:
 
     global analysis_status
     global analysis_started
@@ -1083,7 +1083,8 @@ async def manual_analysis_loop() -> None:
 
         setups = await asyncio.to_thread(
             get_trading_setups,
-            SYMBOL
+            SYMBOL,
+            user_id
         )
 
         if not setups:
@@ -1161,7 +1162,7 @@ async def manual_analysis_loop() -> None:
                 f"{len(results)}"
             )
 
-            await broadcast_snapshot()
+            await broadcast_snapshot(user_id)
 
             await asyncio.sleep(0)
 
@@ -1257,7 +1258,7 @@ async def manual_analysis_loop() -> None:
 
         analysis_completed = True
 
-        await broadcast_snapshot()
+        await broadcast_snapshot(user_id)
 
     except asyncio.CancelledError:
 
@@ -1304,7 +1305,7 @@ async def manual_analysis_loop() -> None:
             error
         )
 
-        await broadcast_snapshot()
+        await broadcast_snapshot(user_id)
 
 def delete_trading_setup(
     symbol: str,
@@ -3423,13 +3424,13 @@ async def training_loop() -> None:
         startup_message = (
             f"Loading Learning trades for {SYMBOL} {TIMEFRAME}..."
         )
-        await broadcast_snapshot()
+        await broadcast_snapshot(user_id)
 
         await asyncio.sleep(0)
 
         startup_progress = 82
         startup_message = "Building numeric training dataset..."
-        await broadcast_snapshot()
+        await broadcast_snapshot(user_id)
 
         await asyncio.sleep(0)
 
@@ -3467,7 +3468,7 @@ async def training_loop() -> None:
         )
         print(f"Model: {result['model']['model_path']}")
 
-        await broadcast_snapshot()
+        await broadcast_snapshot(user_id)
 
     except asyncio.CancelledError:
         running = False
@@ -3486,7 +3487,7 @@ async def training_loop() -> None:
         startup_message = f"TRAINING error: {error}"
         _capture_active_session()
         print("TRAINING ERROR:", error)
-        await broadcast_snapshot()
+        await broadcast_snapshot(user_id)
 
 
 async def testing_loop() -> None:
@@ -3505,7 +3506,7 @@ async def testing_loop() -> None:
             "Run TRAINING first."
         )
         _capture_active_session()
-        await broadcast_snapshot()
+        await broadcast_snapshot(user_id)
         return
 
     reset()
@@ -3561,7 +3562,7 @@ async def testing_loop() -> None:
                 last_reported = progress
                 last_trade_count = trade_count
                 _capture_active_session()
-                await broadcast_snapshot()
+                await broadcast_snapshot(user_id)
 
             await asyncio.sleep(0)
 
@@ -3597,7 +3598,7 @@ async def testing_loop() -> None:
             f"LOSS: {sum(1 for trade in trade_history if trade['result'] == 'LOSS')}"
         )
 
-        await broadcast_snapshot()
+        await broadcast_snapshot(user_id)
 
     except asyncio.CancelledError:
         running = False
@@ -3616,7 +3617,7 @@ async def testing_loop() -> None:
         startup_message = f"TESTING error: {error}"
         _capture_active_session()
         print("TESTING ERROR:", error)
-        await broadcast_snapshot()
+        await broadcast_snapshot(user_id)
 
 
 def startup_snapshot() -> Dict[str, Any]:
@@ -3739,11 +3740,19 @@ def snapshot(user_id: Optional[str] = None) -> Dict[str, Any]:
     }
 
 
-async def broadcast_snapshot() -> None:
-    if not connected_clients:
+async def broadcast_snapshot(
+    user_id: Optional[str] = None
+) -> None:
+
+    clients = connected_clients.get(
+        user_id,
+        set()
+    )
+
+    if not clients:
         return
 
-    data = snapshot()
+    data = snapshot(user_id)
 
     data["startup_stage"] = startup_stage
     data["startup_progress"] = startup_progress
@@ -3753,14 +3762,17 @@ async def broadcast_snapshot() -> None:
 
     dead_clients = []
 
-    for client in list(connected_clients):
+    for client in list(clients):
         try:
             await client.send_text(payload)
         except Exception:
             dead_clients.append(client)
 
     for client in dead_clients:
-        connected_clients.discard(client)
+        clients.discard(client)
+
+    if not clients:
+        connected_clients.pop(user_id, None)
 
 def check_for_quit():
     if msvcrt.kbhit():
@@ -3883,7 +3895,11 @@ async def websocket_endpoint(websocket: WebSocket):
     global last_training_info, last_model_signal, last_model_entry_index
 
     await websocket.accept()
-    connected_clients.add(websocket)
+
+    connected_clients.setdefault(
+        user_id,
+        set()
+    ).add(websocket)
 
     # The backend is the single source of truth for market + timeframe.
     await websocket.send_text(
@@ -4196,7 +4212,7 @@ async def websocket_endpoint(websocket: WebSocket):
                     )
 
                     analysis_task = asyncio.create_task(
-                        manual_analysis_loop()
+                        manual_analysis_loop(user_id)
                     )
 
                     data = snapshot(user_id)
@@ -4638,7 +4654,13 @@ async def websocket_endpoint(websocket: WebSocket):
             print("WebSocket error:", error)
             break
 
-    connected_clients.discard(websocket)
+    clients = connected_clients.get(user_id)
+
+    if clients is not None:
+        clients.discard(websocket)
+
+        if not clients:
+            connected_clients.pop(user_id, None)
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
