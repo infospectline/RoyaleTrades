@@ -144,6 +144,8 @@ const chartContainer = document.getElementById("chart");
     const manualAnalysisButton =    
         document.getElementById("manualAnalysisButton");
 
+    let manualAnalysisActive = false;
+
     const addZoneButton =
         document.getElementById("addZoneButton");
 
@@ -1371,6 +1373,59 @@ const chartContainer = document.getElementById("chart");
         }
 
         return `${symbol} | ${timeframe} | ${status} | Price ${price.toFixed(5)} | Levels ${levels} | Trades ${trades}`;
+    }
+
+    function updateManualAnalysisButton(data) {
+
+        if (!manualAnalysisButton) {
+            return;
+        }
+
+        if (!manualAnalysisActive) {
+            return;
+        }
+
+        if (data?.analysis_status === "manual_analysis") {
+
+            const progress = Math.max(
+                0,
+                Math.min(
+                    100,
+                    Number(
+                        data?.manual_analysis_progress ?? 0
+                    )
+                )
+            );
+
+            manualAnalysisButton.textContent =
+                `ANALYSIS ${progress}%`;
+
+            return;
+        }
+
+        if (
+            data?.analysis_phase ===
+                "manual_analysis_completed"
+        ) {
+            manualAnalysisButton.textContent =
+                "ANALYSIS";
+
+            manualAnalysisActive = false;
+
+            return;
+        }
+
+        if (
+            data?.analysis_phase ===
+                "manual_analysis_error" ||
+            data?.analysis_phase ===
+                "manual_analysis_paused"
+        ) {
+            manualAnalysisButton.textContent =
+                "ANALYSIS";
+
+            manualAnalysisActive = false;
+        }
     }
 
     function updateResultsContext(data) {
@@ -5264,6 +5319,8 @@ const chartContainer = document.getElementById("chart");
             try {
                 const data = JSON.parse(event.data);
 
+                updateManualAnalysisButton(data);
+
                 if (
                     data.analysis_phase === "training_completed" ||
                     data.analysis_phase === "testing_completed" ||
@@ -5471,9 +5528,13 @@ const chartContainer = document.getElementById("chart");
             return;
         }
 
-        manualAnalysisButton.disabled = true;
-        learningAddButton.disabled = true;
+        manualAnalysisActive = true;
 
+        manualAnalysisButton.disabled = true;
+        manualAnalysisButton.textContent =
+            "ANALYSIS 0%";
+
+        learningAddButton.disabled = true;
         trainingButton.disabled = true;
         testingButton.disabled = true;
 

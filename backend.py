@@ -123,6 +123,8 @@ analysis_completed = False
 results_source = "testing"
 manual_analysis_results: Dict[str, Any] = {}
 
+manual_analysis_progress = 0
+
 MANUAL_RISK_PERCENT = 1.0
 
 def _new_session_state() -> Dict[str, Any]:
@@ -1078,6 +1080,7 @@ async def manual_analysis_loop(user_id: Optional[str] = None) -> None:
     global startup_message
     global manual_analysis_results
     global results_source
+    global manual_analysis_progress
 
     try:
 
@@ -1109,6 +1112,8 @@ async def manual_analysis_loop(user_id: Optional[str] = None) -> None:
             "manual_analysis"
         )
 
+        manual_analysis_progress = 0
+
         analysis_phase = (
             "manual_analysis"
         )
@@ -1125,12 +1130,11 @@ async def manual_analysis_loop(user_id: Optional[str] = None) -> None:
             start=1
         ):
 
-            analysis = (
-                _analyze_one_manual_setup(
-                    setup,
-                    index,
-                    balance_value,
-                )
+            analysis = await asyncio.to_thread(
+                _analyze_one_manual_setup,
+                setup,
+                index,
+                balance_value,
             )
 
             if not analysis["valid"]:
@@ -1146,25 +1150,13 @@ async def manual_analysis_loop(user_id: Optional[str] = None) -> None:
                     analysis
                 )
 
-            progress = int(
+            manual_analysis_progress = int(
                 (index / total) * 100
-            )
-
-            startup_progress = (
-                70 +
-                int(progress * 0.30)
-            )
-
-            startup_message = (
-                f"ANALYSIS "
-                f"{index:,}/{total:,} "
-                f"| Trades: "
-                f"{len(results)}"
             )
 
             await broadcast_snapshot(user_id)
 
-            await asyncio.sleep(0)
+            await asyncio.sleep(0.05)
 
         wins = sum(
             1
@@ -1246,6 +1238,8 @@ async def manual_analysis_loop(user_id: Optional[str] = None) -> None:
             "MANUAL ANALYSIS complete."
         )
 
+        manual_analysis_progress = 100
+
         running = False
 
         analysis_status = (
@@ -1262,6 +1256,8 @@ async def manual_analysis_loop(user_id: Optional[str] = None) -> None:
 
     except asyncio.CancelledError:
 
+        manual_analysis_progress = 0
+
         running = False
 
         analysis_status = (
@@ -1277,6 +1273,8 @@ async def manual_analysis_loop(user_id: Optional[str] = None) -> None:
         raise
 
     except Exception as error:
+
+        manual_analysis_progress = 0
 
         running = False
 
@@ -3342,6 +3340,7 @@ def reset() -> None:
     global analysis_status, analysis_started, analysis_completed
     global analysis_phase, model_available, model_info
     global last_training_info, last_model_signal, last_model_entry_index
+    global manual_analysis_progress
 
     cached_strategy_levels = []
     last_level_calculation_index = -1
@@ -3677,6 +3676,7 @@ def snapshot(user_id: Optional[str] = None) -> Dict[str, Any]:
             "analysis_started": analysis_started,
             "analysis_completed": analysis_completed,
             "analysis_phase": analysis_phase,
+            "manual_analysis_progress": manual_analysis_progress,
             "model_available": model_available,
             "model_info": model_info,
             "last_training_info": last_training_info,
@@ -3699,6 +3699,7 @@ def snapshot(user_id: Optional[str] = None) -> Dict[str, Any]:
         "analysis_started": analysis_started,
         "analysis_completed": analysis_completed,
         "analysis_phase": analysis_phase,
+        "manual_analysis_progress": manual_analysis_progress,
         "current_time": visible[-1]["time"],
         "current_price": visible[-1]["close"],
         "h1": h1_data,
@@ -4189,6 +4190,8 @@ async def websocket_endpoint(websocket: WebSocket):
                     results_source = "manual"
                     manual_analysis_results = {}
 
+                    manual_analysis_progress = 0
+
                     analysis_status = (
                         "manual_analysis"
                     )
@@ -4216,6 +4219,8 @@ async def websocket_endpoint(websocket: WebSocket):
                     )
 
                     data = snapshot(user_id)
+
+                    data["manual_analysis_progress"] = 0
 
                     data["startup_stage"] = (
                         startup_stage
