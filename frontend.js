@@ -1677,6 +1677,8 @@ const chartContainer = document.getElementById("chart");
             return;
         }
 
+        drawTradeSetupButton?.classList.remove("selected");
+
         selectedLearningTradeId =
             trade.id;
 
@@ -5379,6 +5381,12 @@ const chartContainer = document.getElementById("chart");
 
                     renderLearningTradeList();
 
+                    lastData = data;
+
+                    requestAnimationFrame(() => {
+                        renderOverlay();
+                    });
+
                     return;
                 }
 
@@ -5600,6 +5608,10 @@ const chartContainer = document.getElementById("chart");
         "click",
         () => {
             setGeometryTool("trade");
+
+            drawTradeSetupButton.classList.add(
+                "selected"
+            );
         }
     );
 
@@ -5719,6 +5731,8 @@ const chartContainer = document.getElementById("chart");
             trade.entry = null;
             trade.sl = null;
             trade.tp = null;
+
+            drawTradeSetupButton?.classList.remove("selected");
 
             renderLearningGeometry();
             updateGeometrySummary();

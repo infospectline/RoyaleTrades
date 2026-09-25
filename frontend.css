@@ -1058,6 +1058,11 @@ html, body {
         color: #fff;
     }
 
+    .trade-setup-button.selected {
+        border-color: #2a9cff;
+        color: #fff;
+    }
+
     .trade-setup-button.active {
         background: rgba(42, 156, 255, 0.22);
         border-color: #2a9cff;
