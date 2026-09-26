@@ -125,6 +125,43 @@ manual_analysis_results: Dict[str, Any] = {}
 
 manual_analysis_progress = 0
 
+USER_MANUAL_ANALYSIS: Dict[
+    Optional[str],
+    Dict[str, Any]
+] = {}
+
+USER_MANUAL_ANALYSIS_TASKS: Dict[
+    Optional[str],
+    asyncio.Task
+] = {}
+
+
+def _new_manual_analysis_state() -> Dict[str, Any]:
+    return {
+        "analysis_status": "idle",
+        "analysis_started": False,
+        "analysis_completed": False,
+        "analysis_phase": "idle",
+        "manual_analysis_progress": 0,
+        "results_source": "testing",
+        "manual_analysis_results": {},
+        "startup_stage": "Waiting for analysis",
+        "startup_progress": 0,
+        "startup_message": "",
+    }
+
+
+def _get_manual_analysis_state(
+    user_id: Optional[str]
+) -> Dict[str, Any]:
+
+    if user_id not in USER_MANUAL_ANALYSIS:
+        USER_MANUAL_ANALYSIS[user_id] = (
+            _new_manual_analysis_state()
+        )
+
+    return USER_MANUAL_ANALYSIS[user_id]
+
 MANUAL_RISK_PERCENT = 1.0
 
 def _new_session_state() -> Dict[str, Any]:
@@ -1078,17 +1115,10 @@ def _analyze_one_manual_setup(
 
 async def manual_analysis_loop(user_id: Optional[str] = None) -> None:
 
-    global analysis_status
-    global analysis_started
-    global analysis_completed
-    global analysis_phase
-    global running
-    global startup_progress
-    global startup_message
-    global manual_analysis_results
-    global results_source
-    global manual_analysis_progress
+    manual_state = _get_manual_analysis_state(user_id)
 
+    global running
+    
     try:
 
         setups = await asyncio.to_thread(
@@ -1115,22 +1145,18 @@ async def manual_analysis_loop(user_id: Optional[str] = None) -> None:
 
         running = True
 
-        analysis_status = (
-            "manual_analysis"
-        )
+        manual_state["analysis_status"] = "manual_analysis"
 
-        manual_analysis_progress = 0
+        manual_state["manual_analysis_progress"] = 0
 
-        analysis_phase = (
-            "manual_analysis"
-        )
+        manual_state["analysis_phase"] = "manual_analysis"
 
-        analysis_started = True
-        analysis_completed = False
+        manual_state["analysis_started"] = True
+        manual_state["analysis_completed"] = False
 
-        results_source = "manual"
+        manual_state["results_source"] = "manual"
 
-        manual_analysis_results = {}
+        manual_state["manual_analysis_results"] = {}
 
         for index, setup in enumerate(
             setups,
@@ -1157,7 +1183,7 @@ async def manual_analysis_loop(user_id: Optional[str] = None) -> None:
                     analysis
                 )
 
-            manual_analysis_progress = int(
+            manual_state["manual_analysis_progress"] = int(
                 (index / total) * 100
             )
 
@@ -1207,7 +1233,7 @@ async def manual_analysis_loop(user_id: Optional[str] = None) -> None:
             else 0.0
         )
 
-        manual_analysis_results = {
+        manual_state["manual_analysis_results"] = {
             "symbol": SYMBOL,
             "timeframe": TIMEFRAME,
 
@@ -1239,71 +1265,52 @@ async def manual_analysis_loop(user_id: Optional[str] = None) -> None:
                 losing_percentage,
         }
 
-        startup_progress = 100
+        manual_state["startup_progress"] = 100
 
-        startup_message = (
+        manual_state["startup_message"] = (
             "MANUAL ANALYSIS complete."
         )
 
-        manual_analysis_progress = 100
+        manual_state["manual_analysis_progress"] = 100
 
         running = False
 
-        analysis_status = (
-            "completed"
-        )
+        manual_state["analysis_status"] = "completed"
 
-        analysis_phase = (
+        manual_state["analysis_phase"] = (
             "manual_analysis_completed"
         )
 
-        analysis_completed = True
+        manual_state["analysis_completed"] = True
 
         await broadcast_snapshot(user_id)
 
     except asyncio.CancelledError:
 
-        manual_analysis_progress = 0
+        manual_state["manual_analysis_progress"] = 0
 
         running = False
 
-        analysis_status = (
-            "paused"
-        )
+        manual_state["analysis_status"] = "paused"
 
-        analysis_phase = (
+        manual_state["analysis_phase"] = (
             "manual_analysis_paused"
         )
 
-        analysis_completed = False
+        manual_state["analysis_completed"] = False
 
         raise
 
     except Exception as error:
 
-        manual_analysis_progress = 0
-
-        running = False
-
-        analysis_status = (
-            "error"
-        )
-
-        analysis_phase = (
-            "manual_analysis_error"
-        )
-
-        analysis_completed = False
-
-        startup_progress = 100
-
-        startup_message = (
-            f"MANUAL ANALYSIS error: {error}"
-        )
-
-        results_source = "manual"
-
-        manual_analysis_results = {}
+        manual_state["manual_analysis_progress"] = 0
+        manual_state["analysis_status"] = "error"
+        manual_state["analysis_phase"] = "manual_analysis_error"
+        manual_state["analysis_completed"] = False
+        manual_state["startup_progress"] = 100
+        manual_state["startup_message"] = f"MANUAL ANALYSIS error: {error}"
+        manual_state["results_source"] = "manual"
+        manual_state["manual_analysis_results"] = {}
 
         print(
             "MANUAL ANALYSIS ERROR:",
@@ -3672,6 +3679,51 @@ def get_trade_detail(
 def snapshot(user_id: Optional[str] = None) -> Dict[str, Any]:
     visible = h1_data[:current_index + 1]
 
+    manual_state = _get_manual_analysis_state(user_id)
+    use_manual_state = manual_state["analysis_phase"] != "idle"
+
+    analysis_status_value = (
+        manual_state["analysis_status"]
+        if use_manual_state
+        else analysis_status
+    )
+
+    analysis_started_value = (
+        manual_state["analysis_started"]
+        if use_manual_state
+        else analysis_started
+    )
+
+    analysis_completed_value = (
+        manual_state["analysis_completed"]
+        if use_manual_state
+        else analysis_completed
+    )
+
+    analysis_phase_value = (
+        manual_state["analysis_phase"]
+        if use_manual_state
+        else analysis_phase
+    )
+
+    manual_analysis_progress_value = (
+        manual_state["manual_analysis_progress"]
+        if use_manual_state
+        else manual_analysis_progress
+    )
+
+    results_source_value = (
+        manual_state["results_source"]
+        if use_manual_state
+        else results_source
+    )
+
+    manual_analysis_results_value = (
+        manual_state["manual_analysis_results"]
+        if use_manual_state
+        else manual_analysis_results
+    )
+
     if not visible:
         return {
             "ready": False,
@@ -3679,11 +3731,11 @@ def snapshot(user_id: Optional[str] = None) -> Dict[str, Any]:
             "timeframe": TIMEFRAME,
             "session_id": _session_id(),
             "mt5_connected": mt5_connected,
-            "analysis_status": analysis_status,
-            "analysis_started": analysis_started,
-            "analysis_completed": analysis_completed,
-            "analysis_phase": analysis_phase,
-            "manual_analysis_progress": manual_analysis_progress,
+            "analysis_status": analysis_status_value,
+            "analysis_started": analysis_started_value,
+            "analysis_completed": analysis_completed_value,
+            "analysis_phase": analysis_phase_value,
+            "manual_analysis_progress": manual_analysis_progress_value,
             "model_available": model_available,
             "model_info": model_info,
             "last_training_info": last_training_info,
@@ -3702,11 +3754,11 @@ def snapshot(user_id: Optional[str] = None) -> Dict[str, Any]:
         "symbol": SYMBOL,
         "timeframe": TIMEFRAME,
         "session_id": _session_id(),
-        "analysis_status": analysis_status,
-        "analysis_started": analysis_started,
-        "analysis_completed": analysis_completed,
-        "analysis_phase": analysis_phase,
-        "manual_analysis_progress": manual_analysis_progress,
+        "analysis_status": analysis_status_value,
+        "analysis_started": analysis_started_value,
+        "analysis_completed": analysis_completed_value,
+        "analysis_phase": analysis_phase_value,
+        "manual_analysis_progress": manual_analysis_progress_value,
         "current_time": visible[-1]["time"],
         "current_price": visible[-1]["close"],
         "h1": h1_data,
@@ -3743,8 +3795,8 @@ def snapshot(user_id: Optional[str] = None) -> Dict[str, Any]:
 
         "learning_trades": get_trading_setups(SYMBOL, user_id),
 
-        "results_source": results_source,
-        "manual_analysis_results": manual_analysis_results,
+        "results_source": results_source_value,
+        "manual_analysis_results": manual_analysis_results_value,
     }
 
 
@@ -3762,9 +3814,16 @@ async def broadcast_snapshot(
 
     data = snapshot(user_id)
 
-    data["startup_stage"] = startup_stage
-    data["startup_progress"] = startup_progress
-    data["startup_message"] = startup_message
+    manual_state = _get_manual_analysis_state(user_id)
+
+    if manual_state["analysis_phase"] != "idle":
+        data["startup_stage"] = manual_state["startup_stage"]
+        data["startup_progress"] = manual_state["startup_progress"]
+        data["startup_message"] = manual_state["startup_message"]
+    else:
+        data["startup_stage"] = startup_stage
+        data["startup_progress"] = startup_progress
+        data["startup_message"] = startup_message
 
     payload = json.dumps(data)
 
@@ -3945,6 +4004,22 @@ async def websocket_endpoint(websocket: WebSocket):
                         f"=== SWITCHING MARKET TO {new_symbol} ==="
                     )
 
+                    user_analysis_task = USER_MANUAL_ANALYSIS_TASKS.get(user_id)
+
+                    if user_analysis_task is not None:
+                        if not user_analysis_task.done():
+                            user_analysis_task.cancel()
+
+                            try:
+                                await user_analysis_task
+                            except asyncio.CancelledError:
+                                pass
+
+                        USER_MANUAL_ANALYSIS_TASKS.pop(
+                            user_id,
+                            None
+                        )
+
                     if analysis_task is not None:
                         analysis_task.cancel()
 
@@ -4038,6 +4113,22 @@ async def websocket_endpoint(websocket: WebSocket):
                     print(
                         f"=== SWITCHING TIMEFRAME TO {new_timeframe} ==="
                     )
+
+                    user_analysis_task = USER_MANUAL_ANALYSIS_TASKS.get(user_id)
+
+                    if user_analysis_task is not None:
+                        if not user_analysis_task.done():
+                            user_analysis_task.cancel()
+
+                            try:
+                                await user_analysis_task
+                            except asyncio.CancelledError:
+                                pass
+
+                        USER_MANUAL_ANALYSIS_TASKS.pop(
+                            user_id,
+                            None
+                        )
 
                     if analysis_task is not None:
                         analysis_task.cancel()
@@ -4163,12 +4254,12 @@ async def websocket_endpoint(websocket: WebSocket):
             if action == "manual_analysis":
                 try:
 
-                    global results_source
-                    global manual_analysis_results
+                    manual_state = _get_manual_analysis_state(user_id)
+                    user_analysis_task = USER_MANUAL_ANALYSIS_TASKS.get(user_id)
 
                     if (
-                        analysis_task is not None
-                        and not analysis_task.done()
+                        user_analysis_task is not None
+                        and not user_analysis_task.done()
                     ):
                         data = snapshot(user_id)
 
@@ -4192,53 +4283,42 @@ async def websocket_endpoint(websocket: WebSocket):
 
                         continue
 
-                    analysis_task = None
+                    manual_state["results_source"] = "manual"
+                    manual_state["manual_analysis_results"] = {}
+                    manual_state["manual_analysis_progress"] = 0
 
-                    results_source = "manual"
-                    manual_analysis_results = {}
+                    manual_state["analysis_status"] = "manual_analysis"
+                    manual_state["analysis_phase"] = "manual_analysis"
+                    manual_state["analysis_started"] = True
+                    manual_state["analysis_completed"] = False
 
-                    manual_analysis_progress = 0
-
-                    analysis_status = (
-                        "manual_analysis"
-                    )
-
-                    analysis_phase = (
-                        "manual_analysis"
-                    )
-
-                    analysis_started = True
-                    analysis_completed = False
-
-                    startup_stage = (
-                        "Manual analysis"
-                    )
-
-                    startup_progress = 70
-
-                    startup_message = (
+                    manual_state["startup_stage"] = "Manual analysis"
+                    manual_state["startup_progress"] = 70
+                    manual_state["startup_message"] = (
                         f"Starting MANUAL ANALYSIS "
                         f"for {SYMBOL} {TIMEFRAME}..."
                     )
 
-                    analysis_task = asyncio.create_task(
+                    USER_MANUAL_ANALYSIS_TASKS[user_id] = asyncio.create_task(
                         manual_analysis_loop(user_id)
                     )
 
                     data = snapshot(user_id)
 
-                    data["manual_analysis_progress"] = 0
+                    data["manual_analysis_progress"] = (
+                        manual_state["manual_analysis_progress"]
+                    )
 
                     data["startup_stage"] = (
-                        startup_stage
+                        manual_state["startup_stage"]
                     )
 
                     data["startup_progress"] = (
-                        startup_progress
+                        manual_state["startup_progress"]
                     )
 
                     data["startup_message"] = (
-                        startup_message
+                        manual_state["startup_message"]
                     )
 
                     await websocket.send_text(
@@ -4254,8 +4334,16 @@ async def websocket_endpoint(websocket: WebSocket):
                         error
                     )
 
-                    results_source = "testing"
-                    manual_analysis_results = {}
+                    manual_state = _get_manual_analysis_state(user_id)
+
+                    manual_state["results_source"] = "testing"
+                    manual_state["manual_analysis_results"] = {}
+                    manual_state["analysis_status"] = "error"
+                    manual_state["analysis_phase"] = "manual_analysis_error"
+                    manual_state["analysis_started"] = True
+                    manual_state["analysis_completed"] = False
+                    manual_state["startup_progress"] = 100
+                    manual_state["startup_message"] = str(error)
 
                     await websocket.send_text(
                         json.dumps({
