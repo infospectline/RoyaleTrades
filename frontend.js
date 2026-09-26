@@ -182,6 +182,9 @@ const chartContainer = document.getElementById("chart");
     const learningAnchorPrice =
         document.getElementById("learningAnchorPrice");
 
+    const learningRRModeButtons =
+        document.querySelectorAll(".learning-rr-mode-button");
+
     const learningAnchorPicker =
         document.getElementById("learningAnchorPicker");
 
@@ -1704,6 +1707,16 @@ const chartContainer = document.getElementById("chart");
         learningAnchorPrice.value =
             trade.anchor?.price ?? "";
 
+        const rrMode =
+            trade.rr_mode || "OFF";
+
+        learningRRModeButtons.forEach(button => {
+            button.classList.toggle(
+                "active",
+                button.dataset.rrMode === rrMode
+            );
+        });
+
         ensureLearningGeometry(trade);
 
         updateGeometrySummary();
@@ -1774,6 +1787,8 @@ const chartContainer = document.getElementById("chart");
                 time: null,
                 price: null
             },
+
+            rr_mode: "OFF",
 
             zones: [],
 
@@ -4039,6 +4054,94 @@ const chartContainer = document.getElementById("chart");
         }
     }
 
+    function applyTradeRRMode(trade, changedLevel) {
+        const mode =
+            trade?.rr_mode || "OFF";
+
+        if (mode === "OFF") {
+            return;
+        }
+
+        const geometry =
+            trade.trade_geometry;
+
+        if (!geometry?.entry?.price) {
+            return;
+        }
+
+        const entry =
+            Number(geometry.entry.price);
+
+        const rr =
+            mode === "2x"
+                ? 2
+                : mode === "3x"
+                    ? 3
+                    : null;
+
+        if (
+            rr == null ||
+            !Number.isFinite(entry)
+        ) {
+            return;
+        }
+
+        if (
+            changedLevel === "sl" &&
+            Number.isFinite(
+                Number(geometry.sl?.price)
+            )
+        ) {
+            const sl =
+                Number(geometry.sl.price);
+
+            const risk =
+                Math.abs(entry - sl);
+
+            if (risk <= 0) {
+                return;
+            }
+
+            const direction =
+                entry > sl
+                    ? 1
+                    : -1;
+
+            geometry.tp.price =
+                entry +
+                direction *
+                risk *
+                rr;
+        }
+
+        if (
+            changedLevel === "tp" &&
+            Number.isFinite(
+                Number(geometry.tp?.price)
+            )
+        ) {
+            const tp =
+                Number(geometry.tp.price);
+
+            const reward =
+                Math.abs(tp - entry);
+
+            if (reward <= 0) {
+                return;
+            }
+
+            const direction =
+                tp > entry
+                    ? 1
+                    : -1;
+
+            geometry.sl.price =
+                entry -
+                direction *
+                (reward / rr);
+        }
+    }
+
     function updateGeometryObjectInteraction(
         event
     ) {
@@ -4056,11 +4159,6 @@ const chartContainer = document.getElementById("chart");
         /*
         * =========================================================
         * FREE DRAG MODE
-        *
-        * Počas MOVE režimu sa už vôbec neprepočítava
-        * grafová geometria.
-        *
-        * Objekt sa pohybuje iba pomocou pixelového translate.
         * =========================================================
         */
         if (
@@ -4104,8 +4202,6 @@ const chartContainer = document.getElementById("chart");
         /*
         * =========================================================
         * EXISTING RESIZE / LEVEL LOGIC
-        *
-        * Resize a level sa správajú ďalej pôvodným spôsobom.
         * =========================================================
         */
 
@@ -4168,6 +4264,11 @@ const chartContainer = document.getElementById("chart");
             ) {
                 trade.trade_geometry[level].price =
                     price;
+
+                applyTradeRRMode(
+                    trade,
+                    level
+                );
             }
         }
 
@@ -5688,6 +5789,35 @@ const chartContainer = document.getElementById("chart");
             renderLearningAnchor();
         }
     );
+
+    learningRRModeButtons.forEach(button => {
+        button.addEventListener(
+            "click",
+            event => {
+                event.preventDefault();
+                event.stopPropagation();
+
+                const trade =
+                    getSelectedLearningTrade();
+
+                if (!trade) {
+                    return;
+                }
+
+                const mode =
+                    button.dataset.rrMode || "OFF";
+
+                trade.rr_mode = mode;
+
+                learningRRModeButtons.forEach(item => {
+                    item.classList.toggle(
+                        "active",
+                        item === button
+                    );
+                });
+            }
+        );
+    });
 
     deleteTradeSetupButton.addEventListener(
         "click",

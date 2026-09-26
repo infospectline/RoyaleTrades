@@ -553,6 +553,13 @@ def save_trading_setup(
 
     setup = copy.deepcopy(setup)
 
+    rr_mode = setup.get("rr_mode", "OFF")
+
+    if rr_mode not in {"OFF", "2x", "3x"}:
+        rr_mode = "OFF"
+
+    setup["rr_mode"] = rr_mode
+
     try:
         setup_id = int(setup.get("id"))
 
